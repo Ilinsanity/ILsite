@@ -6,7 +6,7 @@ import SplitText from "gsap/src/SplitText";
 
 gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
-function App() {
+function Appprev() {
   const handleNavClick =
     (target: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
       event.preventDefault();
@@ -264,4 +264,4 @@ function App() {
   );
 }
 
-export default App;
+export default Appprev;
