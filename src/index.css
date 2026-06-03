@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @theme {
   --color-primary: #ffce1b;
-  --color-background: #211a1d;
+  --color-background: #001524;
 }
-
+/* Custom styles for smooth scrolling 211a1d*/
 #smooth-wrapper {
   overflow: hidden;
   position: fixed;

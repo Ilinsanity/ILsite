@@ -1,196 +1,277 @@
-import { useRef, useState } from "react";
-import { flushSync } from "react-dom";
-import gsap from "gsap";
+import { useLayoutEffect } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollSmoother } from "gsap/ScrollSmoother";
+import SplitText from "gsap/src/SplitText";
 
-const nodes = [
-  { id: "start", x: 50, y: 75, label: null },
-  { id: "n1", x: 22, y: 38, label: "About Me" },
-  { id: "n2", x: 50, y: 32, label: "Projects" },
-  { id: "n3", x: 78, y: 38, label: "Contact Me" },
-];
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText);
 
-// Control points flipped: paths branch upward from start
-const edges = [
-  { from: "start", to: "n1", cx1: 38, cy1: 62, cx2: 18, cy2: 50 },
-  { from: "start", to: "n2", cx1: 42, cy1: 55, cx2: 58, cy2: 45 },
-  { from: "start", to: "n3", cx1: 64, cy1: 62, cx2: 82, cy2: 50 },
-];
+function Appprev() {
+  const handleNavClick =
+    (target: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      ScrollSmoother.get()?.scrollTo(target, true, "top top");
+    };
 
-function App() {
-  const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
-  const pathRefs = useRef<(SVGPathElement | null)[]>([]);
-  const nodeRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const mapRef = useRef<HTMLDivElement>(null);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const dotElRefs = useRef<(HTMLDivElement | null)[][]>([]);
-  const [started, setStarted] = useState(false);
-  const [dotsPerPath, setDotsPerPath] = useState<{ x: number; y: number }[][]>(
-    [],
-  );
+  useLayoutEffect(() => {
+    ScrollSmoother.get()?.kill();
 
-  function handleStart() {
-    if (started) return;
-    setStarted(true);
+    const splitHey = SplitText.create(".text-hey", { type: "chars" });
+    const splitName = SplitText.create(".text-name", { type: "chars" });
+    const splitAbt1 = SplitText.create(".text-abt1", { type: "chars" });
+    const splitName2 = SplitText.create(".text-name2", { type: "words" });
 
-    gsap.to(btnRef.current, {
-      opacity: 0,
-      scale: 0.8,
-      duration: 0.3,
-      onComplete: () => {
-        gsap.set(btnRef.current, { display: "none" });
-      },
-    });
-    gsap.set(mapRef.current, { display: "block" });
-
-    // Sample dot positions along each path (viewBox 0-100 = % of container)
-    const groups = pathRefs.current.map((path) => {
-      if (!path) return [];
-      const length = path.getTotalLength();
-      const dots: { x: number; y: number }[] = [];
-      for (let d = 0; d <= length; d += 4) {
-        const pt = path.getPointAtLength(d);
-        dots.push({ x: pt.x, y: pt.y });
-      }
-      return dots;
+    const smoother = ScrollSmoother.create({
+      wrapper: "#smooth-wrapper",
+      content: "#smooth-content",
+      smooth: 1.5,
+      effects: true,
     });
 
-    dotElRefs.current = groups.map(() => []);
-    // Sync render so dot divs exist before we animate
-    flushSync(() => setDotsPerPath(groups));
-
-    gsap.set(nodeRefs.current[0], { opacity: 0, scale: 0 });
-    nodeRefs.current
-      .slice(1)
-      .forEach((el) => gsap.set(el, { opacity: 0, scale: 0 }));
-    dotElRefs.current.forEach((group) =>
-      gsap.set(group, { opacity: 0, scale: 0 }),
-    );
+    gsap.set(".nav-logo, .nav-item", { autoAlpha: 0, y: -20 });
+    gsap.set(".nav-border", { scaleX: 0, transformOrigin: "left" });
+    gsap.set(".text-capy", { autoAlpha: 0, y: 20 });
+    gsap.set(".img-capy", { autoAlpha: 0, y: 20, scale: 0.9 });
 
     const tl = gsap.timeline();
 
-    tl.to(nodeRefs.current[0], {
-      opacity: 1,
-      scale: 1,
-      duration: 0.2,
-      ease: "power2.out",
-      transformOrigin: "50% 50%",
+    tl.from(splitHey.chars, {
+      yPercent: "random([-100, 100])",
+      autoAlpha: 0,
+      stagger: { amount: 0.2, from: "start" },
+      ease: "power1",
+    })
+      .to(splitHey.chars, {
+        autoAlpha: 0,
+        yPercent: "random([-100, 100])",
+        stagger: { amount: 0.2, from: "random" },
+        ease: "power1.in",
+      })
+      .from(splitName.chars, {
+        yPercent: "random([-100, 100])",
+        autoAlpha: 0,
+        stagger: { amount: 0.2, from: "start" },
+        ease: "power1",
+      })
+      .to(
+        ".nav-logo",
+        { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.4 },
+        "<",
+      )
+      .to(
+        ".nav-item",
+        { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.4, stagger: 0.1 },
+        "<+=0.1",
+      )
+      .to(
+        ".nav-border",
+        { scaleX: 1, ease: "power2.inOut", duration: 1.3 },
+        "<",
+      );
+
+    const tlAbt = gsap.timeline({
+      scrollTrigger: {
+        trigger: ".section-about",
+        start: "top top",
+        end: "+=200%",
+        scrub: true,
+        pin: true,
+        invalidateOnRefresh: true,
+      },
     });
 
-    dotElRefs.current.forEach((group, i) => {
-      tl.to(
-        group,
+    tlAbt
+      .from(splitAbt1.chars, {
+        autoAlpha: 0,
+        yPercent: 100,
+        stagger: { amount: 0.4, from: "start" },
+        ease: "power2.out",
+        duration: 0.6,
+      })
+      .from(
+        splitName2.words,
         {
-          opacity: 1,
-          scale: 1,
-          duration: 0.1,
+          autoAlpha: 0,
+          y: 30,
+          stagger: { amount: 0.6, from: "start" },
           ease: "power2.out",
-          stagger: 0.04,
-          transformOrigin: "50% 50%",
+          duration: 0.5,
         },
-        i === 0 ? "+=0" : "<0.3",
-      );
-      tl.to(
-        nodeRefs.current[i + 1],
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.2,
-          ease: "power2.out",
-          transformOrigin: "50% 50%",
-        },
+        "-=0.2",
+      )
+      .to(
+        ".text-capy",
+        { autoAlpha: 1, y: 0, ease: "power2.out", duration: 0.4 },
+        "-=0.2",
+      )
+      .to(
+        ".img-capy",
+        { autoAlpha: 1, y: 0, scale: 1, ease: "power2.out", duration: 0.5 },
         "-=0.1",
-      );
-    });
-  }
+      )
+      .to(".img-capy", { y: -28, ease: "none", duration: 0.9 }, ">");
+
+    ScrollTrigger.refresh();
+
+    return () => {
+      tl.scrollTrigger?.kill();
+      tlAbt.scrollTrigger?.kill();
+      tl.kill();
+      tlAbt.kill();
+      splitHey.revert();
+      splitName.revert();
+      splitAbt1.revert();
+      splitName2.revert();
+      smoother.kill();
+    };
+  }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden flex items-center justify-center bg-black">
-      <button
-        ref={btnRef}
-        onClick={handleStart}
-        className="z-10 px-8 py-4 text-2xl font-bold text-[#3a2e00] bg-primary rounded-full shadow-lg hover:scale-105 transition-transform"
-      >
-        Start your journey
-      </button>
-
-      <div
-        ref={mapRef}
-        className="absolute inset-0"
-        style={{ display: "none" }}
-      >
-        {/* Invisible paths used only for geometry sampling */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
+    <div id="smooth-wrapper">
+      <nav className="  w-full flex items-center justify-between px-8 py-4 bg-background z-50">
+        <a
+          href="#home"
+          className="nav-logo text-primary font-bold text-xl"
+          onClick={handleNavClick("#home")}
         >
-          {edges.map((edge, i) => {
-            const a = nodeMap[edge.from];
-            const b = nodeMap[edge.to];
-            return (
-              <path
-                key={i}
-                ref={(el) => {
-                  pathRefs.current[i] = el;
-                }}
-                d={`M ${a.x} ${a.y} C ${edge.cx1} ${edge.cy1}, ${edge.cx2} ${edge.cy2}, ${b.x} ${b.y}`}
-                fill="none"
-                stroke="none"
-              />
-            );
-          })}
-        </svg>
-
-        {/* Dots rendered as individual divs, positioned by % */}
-        {dotsPerPath.map((dots, pi) =>
-          dots.map((dot, di) => (
-            <div
-              key={`${pi}-${di}`}
-              ref={(el) => {
-                dotElRefs.current[pi][di] = el;
-              }}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: `${dot.x}%`,
-                top: `${dot.y}%`,
-                width: "7px",
-                height: "7px",
-                transform: "translate(-50%, -50%)",
-              }}
-            />
-          )),
-        )}
-
-        {/* Nodes */}
-        {nodes.map((node, i) => (
-          <div
-            key={node.id}
-            ref={(el) => {
-              nodeRefs.current[i] = el;
-            }}
-            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
-            style={{ left: `${node.x}%`, top: `${node.y}%` }}
-          >
-            <div
-              className={[
-                "rounded-full border-2",
-                node.id === "start"
-                  ? "w-14 h-14 bg-gray-300 border-gray-500"
-                  : "w-28 h-28 bg-white  flex items-center justify-center",
-              ].join(" ")}
+          IL
+        </a>
+        <div className="nav-border absolute bottom-0 left-0 w-full h-px bg-primary/20" />
+        <ul className="flex gap-8 text-primary/80 text-sm tracking-widest uppercase">
+          <li className="nav-item">
+            <a
+              href="#about"
+              className="hover:text-primary transition-colors"
+              onClick={handleNavClick("#about")}
             >
-              {node.label && (
-                <span className="text-[#3a2e00] text-md font-bold text-center leading-tight px-2">
-                  {node.label}
-                </span>
-              )}
+              About
+            </a>
+          </li>
+          <li className="nav-item">
+            <a
+              href="#work"
+              className="hover:text-primary transition-colors"
+              onClick={handleNavClick("#work")}
+            >
+              Work
+            </a>
+          </li>
+          <li className="nav-item">
+            <a
+              href="#projects"
+              className="hover:text-primary transition-colors"
+              onClick={handleNavClick("#projects")}
+            >
+              Projects
+            </a>
+          </li>
+          <li className="nav-item">
+            <a
+              href="#contact"
+              className="hover:text-primary transition-colors"
+              onClick={handleNavClick("#contact")}
+            >
+              Contact
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <div id="smooth-content">
+        <div
+          className="relative h-screen w-full flex flex-col items-center justify-center bg-background bg-cover bg-center bg-no-repeat"
+          id="home"
+        >
+          <div className="relative text-6xl text-center text-primary">
+            <p className="text-hey absolute inset-0 flex items-center justify-center">
+              hey
+            </p>
+            <p className="text-name">Issac Lin here</p>
+            <p className="text-subtext">Front-end Developer</p>
+          </div>
+        </div>
+        <section id="about">
+          <div className="section-about h-screen w-full flex flex-col bg-background justify-center items-center ">
+            <div className="relative text-6xl text-primary mb-10">
+              <p className="text-abt1">some things about me!</p>
+            </div>
+            <div className="mx-auto mt-10 w-full max-w-6xl px-16 text-primary">
+              <div className="text-3xl leading-relaxed md:text-4xl">
+                <img
+                  className="img-capy float-right ml-10 mb-6 block h-80 w-80 rounded-full object-cover"
+                  src="/images/capy.jpeg"
+                  alt="capybara"
+                  style={{
+                    clipPath: "circle(50%)",
+                    shapeOutside: "circle(50%)",
+                    shapeMargin: "1.5rem",
+                  }}
+                />
+                <p className="text-name2 text-left">
+                  Hi, I’m Issac! a front-end developer based in Toronto, Canada
+                  focused on building interactive and visually engaging web
+                  experiences. I enjoy creating websites inspired by games,
+                  music, and digital art using technologies like Next.js,
+                  TypeScript, Tailwind CSS, and Three.js. I’m especially
+                  interested in crafting interfaces that feel immersive,
+                  memorable, and fun to explore.
+                </p>
+                <p className="text-capy mt-6 text-left text-2xl clear-none">
+                  I also love capybaras!
+                </p>
+              </div>
             </div>
           </div>
-        ))}
+        </section>
+        <section
+          className="min-h-screen w-full bg-background px-10 py-28 text-primary"
+          id="work"
+        >
+          <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+            <p className="text-sm uppercase tracking-[0.4em] text-primary/60">
+              Work
+            </p>
+            <div className="grid gap-6 md:grid-cols-2">
+              <article className="rounded-2xl border border-primary/20 bg-primary/5 p-8">
+                <h2 className="text-3xl">Interactive Frontend</h2>
+                <p className="mt-4 text-lg text-primary/80">
+                  Building motion-driven interfaces with React, GSAP, and a
+                  strong focus on pacing, clarity, and feel.
+                </p>
+              </article>
+              <article className="rounded-2xl border border-primary/20 bg-primary/5 p-8">
+                <h2 className="text-3xl">Design Systems</h2>
+                <p className="mt-4 text-lg text-primary/80">
+                  Turning visual ideas into reusable UI patterns that stay sharp
+                  across the whole site.
+                </p>
+              </article>
+            </div>
+          </div>
+        </section>
+        <section
+          className="min-h-screen w-full bg-background px-10 py-28 text-primary"
+          id="contact"
+        >
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 text-center">
+            <p className="text-sm uppercase tracking-[0.4em] text-primary/60">
+              Contact
+            </p>
+            <h2 className="text-5xl">Let&apos;s build something thoughtful.</h2>
+            <p className="text-xl text-primary/80">
+              I care about expressive interfaces, solid implementation, and
+              details that make a site feel intentional.
+            </p>
+            <a
+              href="mailto:isaac@example.com"
+              className="mx-auto mt-4 rounded-full border border-primary/30 px-6 py-3 text-sm uppercase tracking-[0.3em] transition-colors hover:bg-primary hover:text-background"
+            >
+              Get In Touch
+            </a>
+          </div>
+        </section>
       </div>
     </div>
   );
 }
 
-export default App;
+export default Appprev;
