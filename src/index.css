@@ -1,7 +1,19 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: "FOT-Rodin Pro EB";
+  src: url("/fonts/FOT-Rodin Pro EB.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+}
+
 @theme {
   --color-primary: #ffce1b;
   --color-background: #001524;
+  --color-p3r1: #16cffb;
+  --color-p3r2: #7de6fd;
+  --color-p3r3: #77fefc;
+  --font-rodin: "FOT-Rodin Pro EB", sans-serif;
 }
 /* Custom styles for smooth scrolling 211a1d*/
 #smooth-wrapper {
