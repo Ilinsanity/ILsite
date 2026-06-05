@@ -37,26 +37,52 @@ function P3Menu({
   };
 
   useEffect(() => {
-    const slideAnim = animate(".abtbutton", {
+    const SPLIT_DURATION = 500;
+    const slideAnim = animate(".menubutt", {
       opacity: [0, 1],
-      translateY: [140, 0],
-      duration: 1000,
-      ease: "out(4)",
+      translateX: (el: Element, i: number) => {
+        const dirs = [-200, 200, 0, 0];
+        return [dirs[Math.floor(Math.random() * dirs.length)], 0];
+      },
+      translateY: (el: Element, i: number) => {
+        const dirs = [-200, 200, 0, 0];
+        return [dirs[Math.floor(Math.random() * dirs.length)], 0];
+      },
+      duration: 350,
+      ease: "inBack(1.7)",
+      delay: (el: Element, i: number) => 250 + i * 150,
     });
 
+    const frontScreenAnimTop = animate(".fscreentop", {
+      translateY: ["0%", "-100%"],
+      duration: SPLIT_DURATION,
+      ease: "outSine",
+    });
+
+    const frontScreenAnimBot = animate(".fscreenbot", {
+      translateY: ["0%", "100%"],
+      duration: SPLIT_DURATION,
+      ease: "outSine",
+      onComplete: () => {
+        const frntscreen = document.querySelector(".frntscreen") as HTMLElement;
+        if (frntscreen) frntscreen.style.display = "none";
+      },
+    });
     const syncAnim = animate(".pink-tri-scale, .mask-tri-sync", {
       clipPath: [
         "polygon(95% 0%, 80% 40%, 0% 32%)",
-        "polygon(97.93% -1.92%, 81.73% 41.28%, -4.67% 32.64%)",
+        "polygon(98.93% 0%, 81.73% 40.28%, 0% 32.64%)",
         "polygon(95% 0%, 80% 40%, 0% 32%)",
       ],
       duration: 200,
       ease: "inOutSine",
-      loopDelay: 700,
+      loopDelay: 800,
       loop: true,
     });
 
     return () => {
+      frontScreenAnimTop.cancel();
+      frontScreenAnimBot.cancel();
       slideAnim.cancel();
       syncAnim.cancel();
     };
@@ -74,18 +100,26 @@ function P3Menu({
     `absolute inset-0 text-[#FF0000] pointer-events-none z-20 italic font-rodin uppercase text-[clamp(2rem,5vw,6rem)] -tracking-widest w-[clamp(200px,40vw,500px)] h-[clamp(140px,28vw,350px)] pt-[clamp(14px,2.8vw,35px)] pl-[clamp(20px,4vw,50px)] transition-opacity duration-200 group-hover:opacity-100 ${activeClass(page)}`;
   const triStyle1 = {
     clipPath: "polygon(95% 0%, 80% 40%, 0% 32%)",
-    transform: "translate(-10%, -10%)",
+    transform: "translate(-10%, -11%)",
   } as React.CSSProperties;
   const triStyle2 = {
     clipPath: "polygon(92% 1%, 76% 40%, 10% 32%)",
-    transform: "translate(-10%, -10%)",
+    transform: "translate(-10%, -11%)",
   } as React.CSSProperties;
   const btnBase =
     "mitems italic relative block hover:text-black transition-colors duration-200 font-rodin uppercase text-[clamp(2rem,5vw,6rem)] -tracking-widest cursor-pointer bg-transparent border-none p-0 text-left";
 
   return (
-    <div className="p3menu bg-[#000BB5] w-full h-full flex items-center justify-center px-3 sm:px-6 md:px-10 lg:px-20">
-      <div className="flex flex-col items-start">
+    <div className="p3menu bg-[#000BB5] w-full h-full flex items-center justify-center px-3 sm:px-6 md:px-10 lg:px-20 relative">
+      {/* Back layer */}
+      <div className="w-screen h-screen absolute z-20  frntscreen flex flex-col overflow-hidden">
+        <div className="flex w-full h-full bg-white fscreentop"></div>
+        <div className="flex w-full h-2 bg-transparent"></div>
+        <div className="flex w-full h-full bg-white fscreenbot"></div>
+      </div>
+
+      {/* Front layer */}
+      <div className="flex flex-col items-start absolute z-0">
         {/* About */}
         <div className="group relative inline-block">
           <button
@@ -103,7 +137,7 @@ function P3Menu({
               style={triStyle1}
             />
             <div className={`${triBox("about")} bg-white`} style={triStyle2} />
-            <span className="relative z-10 abtbutton inline-block">About</span>
+            <span className="relative z-10 menubutt inline-block">About</span>
             <span
               aria-hidden="true"
               className={`mask-tri-sync ${redText("about")}`}
@@ -138,7 +172,7 @@ function P3Menu({
               style={triStyle1}
             />
             <div className={`${triBox("work")} bg-white`} style={triStyle2} />
-            <span className="relative z-10">Work</span>
+            <span className="relative z-10 menubutt inline-block">Work</span>
             <span
               aria-hidden="true"
               className={`mask-tri-sync ${redText("work")}`}
@@ -176,7 +210,9 @@ function P3Menu({
               className={`${triBox("projects")} bg-white`}
               style={triStyle2}
             />
-            <span className="relative z-10">Projects</span>
+            <span className="relative z-10 menubutt inline-block">
+              Projects
+            </span>
             <span
               aria-hidden="true"
               className={`mask-tri-sync ${redText("projects")}`}
@@ -214,7 +250,7 @@ function P3Menu({
               className={`${triBox("contact")} bg-white`}
               style={triStyle2}
             />
-            <span className="relative z-10">Contact</span>
+            <span className="relative z-10 menubutt inline-block">Contact</span>
             <span
               aria-hidden="true"
               className={`mask-tri-sync ${redText("contact")}`}
